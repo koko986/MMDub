@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MMDub: a private, local Burmese voice and video dubbing studio.">
+  <title>MMDub · Burmese Voice & Video Studio</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230d1018'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%23ff6651'/%3E%3Cpath d='M22 32h4m4-10v20m6-15v10m6-7v4' stroke='%23fff7e8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="MMDub home">
+      <span class="brand-mark" aria-hidden="true">အ</span>
+      <span><strong>MMDub</strong><small>BURMESE VOICE &amp; VIDEO</small></span>
+    </a>
+    <div id="modelStatus" class="model-status" role="status" aria-live="polite">
+      <span class="status-pulse"></span>
+      <span><strong>Checking model</strong><small>မော်ဒယ် စစ်ဆေးနေသည်</small></span>
+    </div>
+  </header>
+
+  <nav class="mode-tabs" aria-label="Studio mode">
+    <button id="quickTab" class="active" type="button" aria-selected="true">Quick voice <small>အမြန်အသံ</small></button>
+    <button id="videoTab" type="button" aria-selected="false">Translate video <small>ဗီဒီယိုဘာသာပြန်</small></button>
+  </nav>
+
+  <div id="voiceModeSwitch" class="voice-mode-switch" role="tablist" aria-label="Quick voice input mode">
+    <button id="ttsModeButton" class="active" type="button" role="tab" aria-selected="true">Text to Speech <small>စာသား → အသံ</small></button>
+    <button id="subtitleTab" type="button" role="tab" aria-selected="false">Subtitle to Speech <small>SRT → အသံ</small></button>
+  </div>
+
+  <main id="quickStudio" class="studio-view">
+    <section id="runtimePanel" class="runtime-panel" hidden aria-live="polite">
+      <div class="runtime-copy">
+        <span class="runtime-symbol" aria-hidden="true">↓</span>
+        <div>
+          <strong id="runtimeTitle">Finish first-time setup</strong>
+          <p id="runtimeMessage">Install the local GPU runtime and Burmese model. This only happens once.</p>
+          <small id="runtimeProgress"></small>
+        </div>
+      </div>
+      <button id="installRuntime" type="button">Finish setup / တပ်ဆင်မည်</button>
+    </section>
+    <section class="composer-panel" aria-labelledby="composeTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">01 · COMPOSE</p>
+          <h1 id="composeTitle">စာရေးပြီး <em>အသံဖန်တီးပါ</em></h1>
+          <p>Write Burmese text and create expressive speech with Burmese or multilingual online voices.</p>
+        </div>
+        <span class="private-badge">LOCAL MEDIA · ONLINE VOICE</span>
+      </div>
+
+      <label class="field-label" for="ttsText">
+        <span>မြန်မာစာ <small>Burmese text</small></span>
+        <span id="textCount" class="count">0 / 50,000 characters</span>
+      </label>
+      <div class="text-shell">
+        <textarea id="ttsText" rows="8" maxlength="50000" spellcheck="false" placeholder="မင်္ဂလာပါ။ ဒီနေ့ နေကောင်းလား။"></textarea>
+        <button id="clearText" class="icon-button clear-button" type="button" title="Clear text" aria-label="Clear text">×</button>
+      </div>
+      <p id="textHint" class="field-hint">Only Burmese text is sent to Microsoft online speech. Completed chunks are cached locally.</p>
+
+      <div class="control-grid">
+        <div class="control-block voice-control">
+          <div class="control-label"><span>အသံ</span><small>VOICE</small></div>
+          <div class="select-row">
+            <select id="voiceSelect" aria-label="Voice profile">
+              <option value="">Built-in voice / မူရင်းအသံ</option>
+            </select>
+            <button id="deleteVoice" hidden type="button" disabled></button>
+            <button id="manageStyles" hidden type="button" disabled></button>
+            <button id="openVoiceDialog" hidden type="button"></button>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <div class="control-label"><span>အမြန်နှုန်း</span><small>SPEED</small></div>
+          <div class="range-row">
+            <input id="speed" type="range" min="0.8" max="2" value="1" step="0.05" aria-label="Speech speed">
+            <output id="speedValue" for="speed">1.00×</output>
+          </div>
+        </div>
+      </div>
+      <div id="quickAnalysis" class="quick-analysis" hidden aria-live="polite"></div>
+
+      <div class="emotion-controls">
+        <div class="control-block">
+          <div class="control-label"><span>ခံစားချက်</span><small>EMOTION</small></div>
+          <select id="quickEmotionMode" aria-label="Emotion mode">
+            <option value="auto" selected>Auto detect / အလိုအလျောက်</option>
+            <option value="off">Neutral / ပုံမှန်</option>
+            <option value="manual">Choose style / ကိုယ်တိုင်ရွေး</option>
+          </select>
+        </div>
+        <div id="quickStyleBlock" class="control-block" hidden>
+          <div class="control-label"><span>ပြောဟန်</span><small>VOICE STYLE</small></div>
+          <select id="quickStyle" aria-label="Voice style"></select>
+        </div>
+      </div>
+
+      <fieldset class="quality-fieldset" hidden>
+        <legend>အသံအရည်အသွေး <small>QUALITY</small></legend>
+        <div class="segmented" role="radiogroup" aria-label="Generation quality">
+          <label><input type="radio" name="quality" value="turbo"><span><b>Turbo</b><small>၂× render</small></span></label>
+          <label><input type="radio" name="quality" value="fast"><span><b>Fast</b><small>မြန်</small></span></label>
+          <label><input type="radio" name="quality" value="balanced" checked><span><b>Balanced</b><small>မျှတ</small></span></label>
+          <label><input type="radio" name="quality" value="high"><span><b>High</b><small>အကောင်းဆုံး</small></span></label>
+        </div>
+      </fieldset>
+
+      <button id="generateButton" class="generate-button" type="button">
+        <span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span><strong>အသံဖန်တီးမည်</strong><small>GENERATE SPEECH</small></span>
+      </button>
+      <div id="generationProgress" class="progress-card" hidden aria-live="polite">
+        <div class="progress-copy"><span id="progressMessage">Preparing…</span><strong id="progressPercent">0%</strong></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+      </div>
+      <div id="formError" class="inline-error" hidden role="alert"></div>
+    </section>
+
+    <aside class="output-panel" aria-labelledby="outputTitle">
+      <div class="output-head">
+        <div><p class="eyebrow">02 · LISTEN</p><h2 id="outputTitle">နားဆင်ရန်</h2></div>
+        <span id="outputDuration" class="duration">—</span>
+      </div>
+
+      <div id="emptyOutput" class="empty-output">
+        <div class="empty-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <strong>Your next voice lives here.</strong>
+        <span>ဖန်တီးထားသော အသံကို ဤနေရာတွင် နားဆင်နိုင်ပါသည်။</span>
+      </div>
+
+      <div id="currentOutput" class="current-output" hidden>
+        <div class="now-playing">
+          <span>NOW PLAYING</span>
+          <strong id="currentVoice">Built-in voice</strong>
+          <p id="currentText"></p>
+        </div>
+        <audio id="audioPlayer" controls preload="metadata"></audio>
+        <a id="downloadCurrent" class="download-button" href="#" download>
+          <span>Download WAV</span><small>WAV ဖိုင် သိမ်းမည်</small>
+        </a>
+      </div>
+
+      <div class="library-head">
+        <div><h3>အသံမှတ်တမ်း</h3><span>RECENT GENERATIONS</span></div>
+        <button id="refreshLibrary" class="text-button" type="button">Refresh</button>
+      </div>
+      <div id="libraryList" class="library-list" aria-live="polite">
+        <div class="library-empty">No saved audio yet. / သိမ်းထားသော အသံ မရှိသေးပါ။</div>
+      </div>
+      <p class="license-note">For personal and noncommercial use · CC BY-NC 4.0</p>
+    </aside>
+  </main>
+
+  <section id="subtitleStudio" class="subtitle-studio studio-view" hidden>
+    <section class="subtitle-input-panel" aria-labelledby="subtitleTitle">
+      <div class="section-heading"><div><p class="eyebrow">SUBTITLE TO SPEECH</p><h1 id="subtitleTitle">SRT စာတန်းကို <em>အသံပြောင်းပါ</em></h1><p>Paste or import Burmese subtitles. The narration follows every cue's original timestamp.</p></div><span class="private-badge">SRT STAYS LOCAL</span></div>
+      <label class="srt-upload" for="subtitleFile"><input id="subtitleFile" type="file" accept=".srt,application/x-subrip,text/plain"><strong>Import an SRT file</strong><small>UTF-8 · maximum 50 minutes</small></label>
+      <label class="field-label" for="subtitleText"><span>SRT subtitles <small>စာတန်း</small></span><span id="subtitleCount" class="count">0 cues</span></label>
+      <textarea id="subtitleText" rows="15" spellcheck="false" placeholder="1&#10;00:00:00,000 --> 00:00:03,000&#10;မင်္ဂလာပါ။"></textarea>
+      <p class="field-hint">If narration is longer than its timestamp window, it is carefully sped up and listed as a timing warning.</p>
+      <div class="subtitle-controls">
+        <label>Voice<select id="subtitleVoice"></select></label>
+        <label>Speed<input id="subtitleSpeed" type="number" min=".8" max="2" step=".05" value="1"></label>
+        <label>Delivery<select id="subtitleEmotion"><option value="auto">Auto expressive</option><option value="off">Neutral</option><option value="manual">Choose style</option></select></label>
+        <label id="subtitleStyleWrap" hidden>Style<select id="subtitleStyle"></select></label>
+      </div>
+      <div id="subtitleError" class="inline-error" hidden role="alert"></div>
+      <button id="generateSubtitle" class="generate-button" type="button"><span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><strong>Generate timed narration</strong><small>SRT အချိန်အတိုင်း အသံဖန်တီးမည်</small></span></button>
+    </section>
+    <aside class="subtitle-output-panel" aria-labelledby="subtitleOutputTitle">
+      <div class="output-head"><div><p class="eyebrow">TIMED OUTPUT</p><h2 id="subtitleOutputTitle">နားဆင်ရန်</h2></div><strong id="subtitleProgressPercent">0%</strong></div>
+      <div id="subtitleEmpty" class="empty-output"><strong>Your synchronized narration appears here.</strong><span>အသံနှင့် SRT ဖိုင်ကို နားဆင်ပြီး သိမ်းနိုင်ပါသည်။</span></div>
+      <div id="subtitleProgress" class="progress-card" hidden aria-live="polite"><div class="progress-copy"><span id="subtitleProgressMessage">Preparing…</span><strong id="subtitleProgressFraction">0 / 0</strong></div><div class="progress-track"><span id="subtitleProgressBar"></span></div></div>
+      <div id="subtitleResult" class="current-output" hidden>
+        <audio id="subtitleAudio" controls preload="metadata"></audio>
+        <div id="subtitleWarnings" class="subtitle-warnings" hidden></div>
+        <a id="downloadSubtitleAudio" class="download-button" href="#" download>Download timed WAV</a>
+        <a id="downloadSubtitleSrt" class="secondary-button subtitle-download" href="#" download>Download original SRT</a>
+      </div>
+    </aside>
+  </section>
+
+  <section id="projectStudio" class="project-studio studio-view" hidden>
+    <header class="project-toolbar">
+      <div>
+        <p class="eyebrow">LONG-FORM STUDIO</p>
+        <h1>အသံရှည်ကို <em>တည်ငြိမ်စွာ</em> ဖန်တီးပါ</h1>
+        <p>Build chapters, review the emotion map, and safely resume long renders.</p>
+      </div>
+      <div class="project-picker">
+        <label for="projectSelect">Project / ပရောဂျက်</label>
+        <div>
+          <select id="projectSelect"><option value="">No project yet</option></select>
+          <button id="newProject" class="primary-button" type="button">New</button>
+          <button id="deleteProject" class="square-button muted-square" type="button" aria-label="Delete project" disabled>×</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="projectEmpty" class="project-empty">
+      <span class="empty-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <h2>Start a long-form narration</h2>
+      <p>Create a project to organize chapters, emotion, and resumable rendering.</p>
+      <button id="emptyNewProject" class="primary-button" type="button">Create project / ပရောဂျက်အသစ်</button>
+    </div>
+
+    <div id="projectWorkspace" class="project-workspace" hidden>
+      <section class="script-workbench" aria-labelledby="scriptTitle">
+        <div class="workbench-head">
+          <div><p class="eyebrow">01 · SCRIPT</p><h2 id="scriptTitle">Chapters</h2></div>
+          <span id="projectCount" class="count">0 / 50,000 syllables</span>
+        </div>
+        <label class="stacked-label">Project title
+          <input id="projectTitle" maxlength="80">
+        </label>
+        <div class="project-settings">
+          <label>Voice<select id="projectVoice"></select></label>
+          <label>Delivery<select id="deliveryMode">
+            <option value="consistent">Consistent narration</option>
+            <option value="conversational">Conversational</option>
+            <option value="dramatic">Dramatic</option>
+          </select></label>
+          <label>Quality<select id="projectQuality">
+            <option value="turbo">Turbo · ~2× render</option>
+            <option value="fast">Fast</option>
+            <option value="balanced">Balanced</option>
+            <option value="high">High</option>
+          </select></label>
+          <label>Speed<input id="projectSpeed" type="number" min=".8" max="2" step=".05" value="1"></label>
+        </div>
+        <label class="intensity-label">Emotion intensity <output id="intensityValue">35%</output>
+          <input id="emotionIntensity" type="range" min="0" max="1" step=".05" value=".35">
+        </label>
+        <div id="chaptersEditor" class="chapters-editor"></div>
+        <div class="chapter-actions">
+          <button id="addChapter" class="secondary-button" type="button">+ Add chapter</button>
+          <label class="secondary-button file-button">Import TXT<input id="projectFile" type="file" accept=".txt,text/plain"></label>
+        </div>
+        <div id="projectError" class="inline-error" hidden role="alert"></div>
+        <div class="project-primary-actions">
+          <button id="saveProject" class="secondary-button" type="button">Save draft</button>
+          <button id="analyzeProject" class="primary-button" type="button">Analyze emotion / ခံစားချက်စစ်မည်</button>
+        </div>
+      </section>
+
+      <aside class="performance-workbench" aria-labelledby="performanceTitle">
+        <div class="workbench-head">
+          <div><p class="eyebrow">02 · PERFORMANCE</p><h2 id="performanceTitle">Emotion map</h2></div>
+          <span id="analyzerBadge" class="analyzer-badge">Not analyzed</span>
+        </div>
+        <div id="missingStyles" class="style-notice" hidden></div>
+        <div id="segmentsList" class="segments-list">
+          <div class="performance-empty">Analyze the script to preview how every sentence will be spoken.</div>
+        </div>
+        <section class="render-dock">
+          <div class="render-summary">
+            <span>ESTIMATED VOICE</span>
+            <strong id="estimatedDuration">00:00</strong>
+          </div>
+          <button id="renderProject" class="generate-button" type="button">
+            <span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span><strong>Render narration</strong><small>အသံရှည် ဖန်တီးမည်</small></span>
+          </button>
+          <div id="renderProgress" class="progress-card" hidden aria-live="polite">
+            <div class="progress-copy"><span id="renderMessage">Preparing…</span><strong id="renderPercent">0%</strong></div>
+            <div class="progress-track"><span id="renderBar"></span></div>
+            <div class="render-controls">
+              <button id="pauseRender" type="button">Pause</button>
+              <button id="resumeRender" type="button" hidden>Resume</button>
+              <button id="cancelRender" type="button">Cancel</button>
+            </div>
+          </div>
+          <div id="renderResult" class="render-result" hidden>
+            <audio id="projectAudio" controls preload="metadata"></audio>
+            <a id="downloadProject" class="download-button" href="#" download>Download combined WAV</a>
+            <div id="chapterDownloads" class="chapter-downloads"></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+
+  <section id="videoStudio" class="video-studio studio-view" hidden>
+    <header class="project-toolbar video-hero">
+      <div><p class="eyebrow">ANY LANGUAGE → BURMESE</p><h1>Link, translate, and <em>keep 1× video</em></h1><p>Upload a video or paste a RedNote link. Available subtitles are reused; otherwise fast local transcription detects the language automatically.</p></div>
+      <div class="privacy-stack"><span class="private-badge">VIDEO STAYS LOCAL</span><button id="openGeminiKeys" class="secondary-button" type="button">Translation keys</button></div>
+    </header>
+
+    <ol class="video-steps" aria-label="Dubbing workflow">
+      <li data-step="source" class="active"><b>1</b><span>Source<small>Upload or RedNote</small></span></li>
+      <li data-step="translation"><b>2</b><span>Translate<small>Review Burmese</small></span></li>
+      <li data-step="voice"><b>3</b><span>Voice &amp; sync<small>Online Nilar or Thiha</small></span></li>
+      <li data-step="complete"><b>4</b><span>Export<small>MP4 + captions</small></span></li>
+    </ol>
+
+    <div class="video-layout">
+      <section class="video-source-card">
+        <div class="workbench-head"><div><p class="eyebrow">SOURCE &amp; DELIVERY</p><h2>New dub</h2></div><span id="geminiBadge" class="analyzer-badge">Keys not set</span></div>
+        <div class="source-mode-switch" role="tablist" aria-label="Video source">
+          <button id="uploadSourceMode" class="active" type="button" role="tab" aria-selected="true">Upload file</button>
+          <button id="rednoteSourceMode" type="button" role="tab" aria-selected="false">RedNote link</button>
+        </div>
+        <div id="uploadSourcePanel">
+        <label id="videoDropZone" class="video-drop" for="videoFiles">
+          <input id="videoFiles" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/webm,.mp4,.mov,.mkv,.webm" multiple>
+          <span class="upload-glyph" aria-hidden="true">＋</span><strong>Choose or drop videos</strong><small>MP4, MOV, MKV, WebM · processed one at a time</small>
+        </label>
+        <div id="videoFileList" class="selected-videos"><span>No video selected.</span></div>
+        </div>
+        <div id="rednoteSourcePanel" class="rednote-source" hidden>
+          <label>RedNote / Xiaohongshu share link<input id="rednoteUrl" type="text" inputmode="url" placeholder="Paste the link or the complete copied share message" autocomplete="off"></label>
+          <div class="rednote-quality"><strong>Best available quality</strong><span>H.264 MP4 preferred · interrupted downloads resume</span></div>
+          <label class="permission-check"><input id="rednotePermission" type="checkbox"><span>I have permission to download and repurpose this video.</span></label>
+          <p class="field-hint">You can paste the entire message from RedNote’s Share button. The link is encrypted for resume. The app tries anonymous access, then your signed-in Chrome or Edge session without copying browser cookies.</p>
+        </div>
+        <fieldset class="translation-choice">
+          <legend>How should the Burmese translation be added?</legend>
+          <label><input type="radio" name="videoTranslationMode" value="manual" checked><span><strong>Manual SRT</strong><small>Fastest handoff · copy transcript and import your translation</small></span></label>
+          <label><input type="radio" name="videoTranslationMode" value="gemini"><span><strong>Gemini automatic</strong><small>Send transcript text to your saved Gemini key</small></span></label>
+        </fieldset>
+        <div class="video-settings-grid">
+          <label>Voice<select id="videoVoice"></select></label>
+          <label hidden>Quality<select id="videoQuality"><option value="balanced">Online</option></select></label>
+          <label>Speech speed<input id="videoSpeed" type="number" min=".8" max="2" step=".05" value="1"></label>
+          <label>Delivery<select id="videoDelivery"><option value="consistent">Consistent narration</option><option value="conversational">Conversational</option><option value="dramatic">Dramatic</option></select></label>
+          <label>Output frame<select id="videoRatio"><option value="original">Original</option><option value="16:9">16:9 landscape</option><option value="9:16">9:16 vertical</option><option value="1:1">1:1 square</option></select></label>
+          <label>Framing<select id="videoFill"><option value="fit">Fit · keep everything</option><option value="fill">Fill · crop edges</option></select></label>
+          <label class="check-setting"><input id="mirrorOnImport" type="checkbox" checked><span>Mirror horizontally before review<small>Preview and export orientation; original file stays intact.</small></span></label>
+        </div>
+        <div class="video-experience-row">
+          <p><strong>Natural spoken Burmese</strong><small>Manual SRT is private and fastest; Gemini can optionally adapt conversation, explanation, news, or storytelling.</small></p>
+          <label class="sound-toggle"><input id="completionSound" type="checkbox" checked><span>Completion sound<small>Review + export alerts</small></span></label>
+        </div>
+        <details class="video-note"><summary>How privacy and online voice work</summary><p>Video and source audio stay on this computer. Manual SRT mode sends no transcript anywhere. Gemini mode sends transcript text to Gemini. After approval, only Burmese narration text is sent to Microsoft online speech.</p></details>
+        <div id="videoError" class="inline-error" hidden role="alert"></div>
+        <button id="startVideoDub" class="generate-button" type="button"><span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><strong>Translate videos</strong><small>စာတန်းထုတ်ပြီး ဘာသာပြန်မည်</small></span></button>
+      </section>
+
+      <section class="video-work-card">
+        <div class="workbench-head"><div><p class="eyebrow">QUEUE &amp; REVIEW</p><h2>Your videos</h2><p id="videoQueueSummary" class="muted">Downloads and transcription can run in parallel.</p></div><select id="videoJobSelect"><option value="">No jobs yet</option></select></div>
+        <div id="videoEmpty" class="performance-empty">Upload a video to begin. You can leave the studio open while the queue works.</div>
+        <div id="videoJobView" hidden>
+          <div class="video-job-head"><div><span id="videoJobState">WAITING</span><h3 id="videoJobTitle">Video</h3></div><strong id="videoJobPercent">0%</strong></div>
+          <div class="progress-track"><span id="videoJobBar"></span></div>
+          <p id="videoJobMessage" class="field-hint"></p>
+          <section id="videoFailure" class="video-failure" hidden role="alert" aria-labelledby="videoFailureTitle">
+            <div class="failure-mark" aria-hidden="true">!</div>
+            <div><p class="eyebrow">EXPORT NEEDS ATTENTION</p><h3 id="videoFailureTitle">Export could not finish</h3><p id="videoFailureMessage"></p><small>Your transcript, Burmese translation, narration clips, and edit settings remain saved.</small></div>
+          </section>
+          <div id="videoActivity" class="video-activity" hidden aria-live="polite" aria-busy="true">
+            <div class="activity-head"><span class="activity-spinner" aria-hidden="true"></span><div><strong id="videoActivityTitle">Working on your video</strong><small id="videoElapsed">Elapsed 0:00</small></div></div>
+            <div class="activity-stages" aria-label="Processing stages"><span data-activity-stage="download">Download</span><span data-activity-stage="transcription">Source transcript</span><span data-activity-stage="translation">Burmese translation</span><span data-activity-stage="voice">Voice generation</span><span data-activity-stage="smart_sync">Fixed timing · video 1×</span></div>
+            <div id="videoLiveSegments" class="live-segments"></div>
+          </div>
+          <div id="videoActiveActions" class="recovery-actions" hidden><button id="pauseVideo" class="secondary-button" type="button">Pause after this step</button><button id="cancelVideo" class="secondary-button" type="button">Cancel</button></div>
+          <div id="videoRecovery" class="recovery-actions" hidden><button id="retryVideo" class="primary-button" type="button">Retry / Resume</button><button id="deleteVideo" class="secondary-button" type="button">Delete</button></div>
+          <section id="manualTranslation" class="manual-translation" hidden aria-labelledby="manualTranslationTitle">
+            <div class="manual-heading"><div><p class="eyebrow">TRANSLATION HANDOFF</p><h3 id="manualTranslationTitle">Add your Burmese SRT</h3><p>The source timestamps are the sync contract. Translate the text, keep every cue number, then paste or import the completed SRT.</p></div><span id="manualExpected" class="count">0 cues</span></div>
+            <div class="transcript-actions">
+              <button id="copySourceTranscript" class="secondary-button" type="button">Copy numbered transcript</button>
+              <button id="copySourceSrt" class="secondary-button" type="button">Copy SRT template</button>
+              <a id="downloadSourceSrt" class="secondary-button" href="#" download>Download source SRT</a>
+            </div>
+            <div class="manual-import">
+              <label class="file-button secondary-button">Choose Burmese SRT<input id="manualSrtFile" type="file" accept=".srt,application/x-subrip,text/plain"></label>
+              <label for="manualSrtText">Paste translated Burmese SRT</label>
+              <textarea id="manualSrtText" spellcheck="false" placeholder="1&#10;00:00:00,000 --> 00:00:03,200&#10;မြန်မာဘာသာပြန်စာ…"></textarea>
+              <div class="manual-validation"><span id="manualSrtCount">0 cues found</span><span id="manualSrtStatus">Waiting for SRT</span></div>
+              <div id="manualSrtError" class="inline-error" hidden role="alert"></div>
+              <button id="importManualSrt" class="primary-button" type="button">Import SRT &amp; open editor</button>
+            </div>
+            <button id="switchManual" class="text-button" type="button" hidden>Continue with manual SRT</button>
+          </section>
+          <div id="videoReview" hidden>
+            <div class="review-heading"><div><h3>Scene editor</h3><p>Preview and adjust picture, translation, delivery, captions, and ambience before export.</p></div><div class="review-heading-actions"><button id="replaceWithSrt" class="secondary-button" type="button">Replace with SRT</button><span id="videoSegmentCount" class="count"></span></div></div>
+            <div class="editor-toolbar" role="toolbar" aria-label="Editor actions">
+              <button id="editorUndo" type="button">Undo</button><button id="editorRedo" type="button">Redo</button>
+              <button id="previewTimeline" type="button">Preview all</button><button id="addCaptionCue" type="button">Add timed sentence</button><span id="editSaveState" role="status">Saved</span>
+            </div>
+            <div class="editor-preview"><video id="sourcePreview" controls preload="metadata"></video><div id="blurPreview" class="blur-preview" tabindex="0" aria-label="Original subtitle blur region"></div><div id="captionPreview" class="caption-preview" tabindex="0"><span class="caption-burmese"></span><span class="caption-original"></span></div></div>
+            <div id="sceneTimeline" class="scene-timeline" aria-live="polite"><span class="timeline-range"></span><strong>Select a scene to inspect its cue</strong></div>
+            <div class="mix-settings">
+              <input id="captionBurn" type="checkbox" hidden aria-hidden="true">
+              <label><input id="mirrorHorizontal" type="checkbox"> Mirror picture left to right</label>
+              <label>One voice for this video <select id="reviewVideoVoice"></select></label>
+              <label>Original ambience <input id="originalAudioVolume" type="range" min="0" max="1" step=".05" value=".12"><output id="originalAudioValue">12%</output></label>
+              <label><input id="audioDucking" type="checkbox" checked> Duck under narration</label>
+              <label>Myanmar font <select id="captionFont"><option value="Noto Sans Myanmar">Noto Sans Myanmar</option><option value="Padauk">Padauk</option><option value="Pyidaungsu">Pyidaungsu</option><option value="TharLon">TharLon</option><option value="Myanmar Sans Pro">Myanmar Sans Pro</option></select></label>
+              <label>Font size <span class="inline-control"><input id="captionSize" type="range" min="20" max="120" step="1" value="44"><output id="captionSizeValue">44</output></span></label>
+              <label>Text color <input id="captionColor" type="color" value="#ffffff"></label>
+              <label>Subtitle length <select id="captionSplit"><option value="short">Short · recommended</option><option value="balanced">Medium</option><option value="full">Full sentence</option></select><small>Only changes caption cards, not narration.</small></label>
+              <label>Position <select id="captionPosition"><option value="lower">Lower safe area</option><option value="center">Center</option><option value="upper">Upper safe area</option><option value="custom">Custom position</option></select></label>
+              <label>X position <input id="captionX" type="range" min=".05" max=".95" step=".01" value=".5"></label>
+              <label>Y position <input id="captionY" type="range" min=".05" max=".95" step=".01" value=".9"></label>
+            </div>
+            <fieldset class="export-mode-picker">
+              <legend>Choose what to export</legend>
+              <label><input type="radio" name="videoExportMode" value="voiceover_captions" checked><span><strong>Voice-over + captions</strong><small>Burmese narration, quiet ambience, and styled subtitles</small></span></label>
+              <label><input type="radio" name="videoExportMode" value="voiceover_only"><span><strong>Voice-over only</strong><small>Narration and ambience without burned subtitles</small></span></label>
+              <label><input type="radio" name="videoExportMode" value="subtitles_only"><span><strong>Subtitles only</strong><small>Keep original audio and skip online voice generation</small></span></label>
+            </fieldset>
+            <div id="exportCheckpoint" class="export-checkpoint" hidden aria-live="polite"></div>
+            <section class="blur-controls" aria-labelledby="blurTitle">
+              <div><p class="eyebrow">ORIGINAL SUBTITLE</p><h3 id="blurTitle">Blur source captions</h3><span id="blurConfidence" class="field-hint">Detection pending</span></div>
+              <label><input id="blurEnabled" type="checkbox"> Enable blur</label>
+              <label>X <input id="blurX" type="number" min="0" max="1" step=".01"></label>
+              <label>Y <input id="blurY" type="number" min="0" max="1" step=".01"></label>
+              <label>Width <input id="blurWidth" type="number" min=".02" max="1" step=".01"></label>
+              <label>Height <input id="blurHeight" type="number" min=".02" max="1" step=".01"></label>
+              <label>Strength <input id="blurStrength" type="range" min="2" max="40" step="1"></label>
+              <button id="redetectBlur" type="button">Detect again</button>
+            </section>
+            <div id="videoSegments" class="video-segments"></div>
+            <button id="renderVideo" class="generate-button" type="button"><span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><strong>Export approved video</strong><small>အသံဖန်တီးပြီး ပုံနှင့်ညှိမည်</small></span></button>
+          </div>
+          <div id="videoResult" class="video-result" hidden>
+            <video id="dubbedVideo" controls preload="metadata"></video>
+            <div class="video-result-actions">
+              <button id="editAgain" class="secondary-button" type="button">Edit again</button>
+              <a id="downloadDubbedVideo" class="download-button" href="#" download>Download Burmese MP4</a>
+              <button id="deleteCompletedVideo" class="danger-button" type="button">Delete video</button>
+            </div>
+            <p class="field-hint">Delete removes this finished video, its source file, previews, subtitles, and local project data. Download anything you want to keep first.</p>
+            <div class="artifact-links"><a data-artifact="audio" href="#">Narration WAV</a><a data-artifact="burmese" href="#">Burmese TXT</a><a data-artifact="english" href="#">Source transcript</a><a data-artifact="srt" href="#">Burmese SRT</a><a data-artifact="plan" href="#">Sync plan</a></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section id="batchStudio" class="batch-studio studio-view" hidden>
+    <header class="project-toolbar">
+      <div><p class="eyebrow">VIDEO VOICEOVER QUEUE</p><h1>ဗီဒီယိုများအတွက် <em>အသံတန်းစီ</em></h1><p>Add many scripts, assign a voice to each, and let the GPU render them one at a time.</p></div>
+      <button id="newBatch" class="primary-button" type="button">+ New batch</button>
+    </header>
+    <div class="batch-layout">
+      <section class="script-workbench">
+        <div class="workbench-head"><div><p class="eyebrow">01 · ADD SCRIPTS</p><h2>Video list</h2></div><span id="batchCount" class="count">0 videos</span></div>
+        <label class="stacked-label">Batch title<input id="batchTitle" maxlength="80" value="My video voiceovers"></label>
+        <div class="batch-imports">
+          <label class="secondary-button file-button">Add TXT files<input id="batchFiles" type="file" accept=".txt,text/plain" multiple></label>
+          <label class="secondary-button file-button">Import CSV<input id="batchCsv" type="file" accept=".csv,text/csv"></label>
+          <button id="addBatchItem" class="secondary-button" type="button">+ Blank script</button>
+        </div>
+        <p class="field-hint">CSV columns: video_name, script, voice, speed, quality, delivery</p>
+        <div id="batchItems" class="batch-items"></div>
+        <div id="batchError" class="inline-error" hidden role="alert"></div>
+        <button id="startBatch" class="generate-button" type="button"><span class="generate-icon"><i></i><i></i><i></i><i></i></span><span><strong>Start batch</strong><small>တစ်ခုပြီးတစ်ခု ဖန်တီးမည်</small></span></button>
+      </section>
+      <aside class="performance-workbench">
+        <div class="workbench-head"><div><p class="eyebrow">02 · QUEUE</p><h2>Progress</h2></div><select id="batchSelect"><option value="">Recent batches</option></select></div>
+        <div id="batchEmpty" class="performance-empty">Add scripts or choose a recent batch.</div>
+        <div id="batchProgress" hidden>
+          <div class="render-summary"><span id="batchState">WAITING</span><strong id="batchFraction">0 / 0</strong></div>
+          <div class="progress-track"><span id="batchBar"></span></div>
+          <p id="batchMessage" class="field-hint"></p>
+          <div class="render-controls"><button id="pauseBatch" type="button">Pause</button><button id="resumeBatch" type="button">Resume</button><button id="cancelBatch" type="button">Cancel</button><button id="retryBatch" type="button">Retry failed</button></div>
+          <div id="batchResults" class="batch-results"></div>
+          <a id="downloadBatch" class="download-button" href="#" download>Download completed WAVs (.zip)</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <dialog id="voiceDialog">
+    <form id="voiceForm" method="dialog">
+      <div class="dialog-head">
+        <div><p class="eyebrow">VOICE PROFILE</p><h2>ကိုယ်ပိုင်အသံ ထည့်မည်</h2><p>Add a 3–5 second voice reference and its exact Burmese transcript.</p></div>
+        <button id="closeVoiceDialog" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+
+      <label class="stacked-label">Profile name / အသံအမည်
+        <input id="voiceName" name="name" maxlength="40" required placeholder="My voice">
+      </label>
+      <label class="stacked-label">Exact transcript / ပြောထားသော စာသားအတိအကျ
+        <textarea id="voiceTranscript" name="transcript" rows="3" required placeholder="ကျွန်တော် မောင်မောင်ပါ။"></textarea>
+      </label>
+
+      <div class="audio-source-tabs" role="tablist" aria-label="Reference audio source">
+        <button id="uploadTab" class="active" type="button" role="tab" aria-selected="true">Upload WAV</button>
+        <button id="recordTab" type="button" role="tab" aria-selected="false">Record microphone</button>
+      </div>
+      <div id="uploadPanel" class="audio-panel">
+        <label class="drop-zone" for="voiceFile">
+          <input id="voiceFile" type="file" accept="audio/wav,.wav">
+          <span class="upload-glyph">＋</span>
+          <strong id="fileLabel">Choose a WAV file</strong>
+          <small>Mono or stereo · up to 15 seconds · 20 MB</small>
+        </label>
+      </div>
+      <div id="recordPanel" class="audio-panel" hidden>
+        <button id="recordButton" class="record-button" type="button"><span></span><b>Start recording</b></button>
+        <div class="record-info"><strong id="recordTimer">00:00</strong><span id="recordState">Microphone stays on this device.</span></div>
+        <audio id="recordPreview" controls hidden></audio>
+      </div>
+
+      <label class="consent-row"><input id="voiceConsent" type="checkbox" required><span>I have permission to use this voice. / ဤအသံကို အသုံးပြုရန် ခွင့်ပြုချက်ရှိပါသည်။</span></label>
+      <div id="voiceError" class="inline-error" hidden role="alert"></div>
+      <div class="dialog-actions">
+        <button id="cancelVoice" class="secondary-button" type="button">Cancel</button>
+        <button id="saveVoice" class="primary-button" type="submit">Save voice / အသံသိမ်းမည်</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="styleDialog">
+    <form id="styleForm" method="dialog">
+      <div class="dialog-head">
+        <div><p class="eyebrow">VOICE EMOTIONS</p><h2>Emotion style clips</h2><p>Record the same voice speaking naturally in each style. Neutral is already saved.</p></div>
+        <button id="closeStyleDialog" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+      <div id="savedStyles" class="saved-styles"></div>
+      <label class="stacked-label">Style / ပြောဟန်
+        <select id="styleName">
+          <option value="warm">Warm</option><option value="happy">Happy</option>
+          <option value="sad">Sad</option><option value="angry">Angry</option>
+          <option value="excited">Excited</option><option value="serious">Serious</option>
+          <option value="inquisitive">Inquisitive</option>
+        </select>
+      </label>
+      <label class="stacked-label">Exact transcript
+        <textarea id="styleTranscript" rows="3" required></textarea>
+      </label>
+      <label class="drop-zone compact-drop" for="styleFile">
+        <input id="styleFile" type="file" accept="audio/wav,.wav">
+        <span class="upload-glyph">＋</span><strong id="styleFileLabel">Choose a 3–5 second WAV</strong>
+        <small>Up to 15 seconds · 20 MB</small>
+      </label>
+      <div class="style-record-row">
+        <button id="styleRecord" class="record-button" type="button"><span></span><b>Record instead</b></button>
+        <strong id="styleRecordTimer">00:00</strong>
+      </div>
+      <audio id="stylePreview" controls hidden></audio>
+      <div id="styleError" class="inline-error" hidden role="alert"></div>
+      <div class="dialog-actions">
+        <button id="cancelStyle" class="secondary-button" type="button">Cancel</button>
+        <button id="saveStyle" class="primary-button" type="submit">Save style</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="projectDialog">
+    <form id="projectForm" method="dialog">
+      <div class="dialog-head">
+        <div><p class="eyebrow">NEW PROJECT</p><h2>Start a narration</h2></div>
+        <button id="closeProjectDialog" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+      <label class="stacked-label">Project title<input id="newProjectTitle" maxlength="80" required value="My narration"></label>
+      <label class="stacked-label">First chapter text<textarea id="newProjectText" rows="7" required placeholder="မြန်မာစာကို ဤနေရာတွင် ထည့်ပါ။"></textarea></label>
+      <div id="newProjectError" class="inline-error" hidden role="alert"></div>
+      <div class="dialog-actions">
+        <button id="cancelProject" class="secondary-button" type="button">Cancel</button>
+        <button class="primary-button" type="submit">Create project</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="geminiDialog">
+    <form id="geminiForm" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">TRANSLATION ACCESS</p><h2>Gemini API keys</h2><p>Keep one key per line. Keys are encrypted for your Windows account and automatically rotate if a key or model fails.</p></div><button id="closeGeminiDialog" class="icon-button" type="button" aria-label="Close">×</button></div>
+      <div id="savedKeyStatus" class="key-status">No keys saved.</div>
+      <label class="stacked-label">Add or replace keys<textarea id="geminiKeys" rows="7" spellcheck="false" autocomplete="off" placeholder="Paste one key per line"></textarea></label>
+      <p class="field-hint">The studio never displays a saved key again. Saving replaces the current encrypted pool.</p>
+      <div id="geminiError" class="inline-error" hidden role="alert"></div>
+      <div class="dialog-actions"><button id="clearGeminiKeys" class="secondary-button" type="button">Remove saved keys</button><button id="testGeminiKeys" class="secondary-button" type="button">Test saved keys</button><button id="saveGeminiKeys" class="primary-button" type="submit">Encrypt &amp; save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="captionCueDialog">
+    <form id="captionCueForm" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">NEW TIMED SENTENCE</p><h2>Add Burmese subtitle cue</h2><p>The video remains at native speed. Narration must fit inside this time range.</p></div><button id="closeCaptionCue" class="dialog-close" type="button">Close</button></div>
+      <div class="cue-time-grid"><label>Start time (seconds)<input id="newCueStart" type="number" min="0" step=".01" required></label><label>End time (seconds)<input id="newCueEnd" type="number" min=".01" step=".01" required></label></div>
+      <label class="stacked-label">Burmese sentence<textarea id="newCueText" rows="4" maxlength="5000" required></textarea></label>
+      <label class="consent-row"><input id="newCueCaptionOnly" type="checkbox"><span>Caption only — do not create narration for this sentence</span></label>
+      <div id="newCueError" class="inline-error" hidden role="alert"></div>
+      <div class="dialog-actions"><button id="cancelCaptionCue" class="secondary-button" type="button">Cancel</button><button class="primary-button" type="submit">Add timed sentence</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+</body>
+</html>

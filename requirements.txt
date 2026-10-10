@@ -1,0 +1,15 @@
+fastapi==0.118.0
+uvicorn[standard]==0.37.0
+python-multipart==0.0.20
+numpy==2.2.6
+soundfile==0.13.1
+pip-system-certs==5.3
+edge-tts==7.2.8
+transformers==4.57.1
+sentencepiece==0.2.1
+google-genai==2.25.0
+faster-whisper==1.2.1
+av==18.0.0
+imageio-ffmpeg==0.6.0
+yt-dlp[default,curl-cffi]==2026.8.19
+opencv-python-headless==5.0.0.93
