@@ -736,6 +736,7 @@ class VideoDubbingQueue:
         result = self.downloader.download(
             job_id, self.remote_sources.load(job_id), self.videos.folder(job_id),
             bool(settings.get("best_quality", True)),
+            bool(settings.get("allow_browser_cookies", False)),
         )
         source = ensure_browser_video(result["path"])
         self.videos.update(

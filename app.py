@@ -152,6 +152,7 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 class JobRequest(BaseModel):
     text: str = Field(min_length=1)
+    online_speech_consent: bool = False
     voice_id: str | None = None
     speed: float = 1.0
     preset: str = "balanced"
@@ -162,6 +163,7 @@ class JobRequest(BaseModel):
 
 class SubtitleJobRequest(BaseModel):
     srt: str = Field(min_length=1)
+    online_speech_consent: bool = False
     voice_id: str | None = None
     speed: float = Field(default=1.0, ge=0.8, le=2.0)
     emotion_mode: str = "auto"
@@ -218,6 +220,7 @@ class BatchItemRequest(BaseModel):
 class BatchRequest(BaseModel):
     title: str = Field(default="Video voiceovers", min_length=1, max_length=80)
     items: list[BatchItemRequest] = Field(min_length=1, max_length=100)
+    online_speech_consent: bool = False
 
 
 class GeminiKeysRequest(BaseModel):
@@ -269,6 +272,11 @@ class VideoSegmentCreate(BaseModel):
 
 class VideoExportRequest(BaseModel):
     mode: str | None = None
+    speech_consent: bool = False
+
+
+class SpeechConsentRequest(BaseModel):
+    online_speech_consent: bool = False
 
 
 class VideoEditPlan(BaseModel):
@@ -279,6 +287,7 @@ class VideoEditPlan(BaseModel):
 class RedNoteJobRequest(BaseModel):
     url: str = Field(min_length=8, max_length=4096)
     permission_confirmed: bool = False
+    allow_browser_cookies: bool = False
     voice_id: str | None = None
     speed: float = Field(default=1.0, ge=.8, le=2.0)
     delivery_mode: str = "consistent"
@@ -295,6 +304,7 @@ class RedNoteJobRequest(BaseModel):
     mirror_horizontal: bool = True
     export_mode: str = "voiceover_captions"
     translation_mode: str = "manual"
+    translation_consent: bool = False
 
 
 class ManualSrtRequest(BaseModel):
@@ -304,6 +314,21 @@ class ManualSrtRequest(BaseModel):
 @app.get("/", include_in_schema=False)
 def index():
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/privacy", include_in_schema=False)
+def privacy_page():
+    return FileResponse(STATIC / "privacy.html")
+
+
+@app.get("/terms", include_in_schema=False)
+def terms_page():
+    return FileResponse(STATIC / "terms.html")
+
+
+@app.get("/cookies", include_in_schema=False)
+def cookie_policy_page():
+    return FileResponse(STATIC / "cookies.html")
 
 
 @app.get("/api/status")
@@ -488,6 +513,8 @@ def delete_voice(voice_id: str):
 
 @app.post("/api/jobs", status_code=202)
 def create_job(request: JobRequest):
+    if not request.online_speech_consent:
+        raise HTTPException(400, "Confirm that your text and voice settings may be sent to the online speech provider.")
     try:
         return jobs.submit(
             request.text,
@@ -512,6 +539,8 @@ def get_job(job_id: str):
 
 @app.post("/api/subtitle-jobs", status_code=202)
 def create_subtitle_job(request: SubtitleJobRequest):
+    if not request.online_speech_consent:
+        raise HTTPException(400, "Confirm that your subtitle text and voice settings may be sent to the online speech provider.")
     if request.emotion_mode not in ("auto", "off", "manual"):
         raise HTTPException(400, "Unknown emotion mode.")
     if request.style_override and request.style_override not in STYLES:
@@ -706,7 +735,9 @@ def update_segment(project_id: str, segment_id: str, request: SegmentStyleReques
 
 
 @app.post("/api/projects/{project_id}/renders", status_code=202)
-def start_project_render(project_id: str):
+def start_project_render(project_id: str, request: SpeechConsentRequest):
+    if not request.online_speech_consent:
+        raise HTTPException(400, "Confirm that your script and voice settings may be sent to the online speech provider.")
     try:
         return project_queue.start(project_id)
     except ValueError as exc:
@@ -764,6 +795,8 @@ def list_batches():
 
 @app.post("/api/batches", status_code=202)
 def create_batch(request: BatchRequest):
+    if not request.online_speech_consent:
+        raise HTTPException(400, "Confirm that your scripts and voice settings may be sent to the online speech provider.")
     items: list[dict] = []
     for index, item in enumerate(request.items):
         _validate_project_options(item.voice_id, item.speed, item.preset, item.delivery_mode, 0.45)
@@ -895,6 +928,8 @@ async def create_video_jobs(files: list[UploadFile] = File(...), settings: str =
         options = json.loads(settings)
     except json.JSONDecodeError as exc:
         raise HTTPException(400, "Video settings are invalid.") from exc
+    if options.get("translation_mode") == "gemini" and not options.get("translation_consent"):
+        raise HTTPException(400, "Confirm that the source transcript may be sent to Google Gemini.")
     voice_id = options.get("voice_id") or DEFAULT_VOICE
     try:
         online_voice(voice_id)
@@ -976,9 +1011,12 @@ def create_rednote_video_job(request: RedNoteJobRequest):
         "caption_split": request.caption_split if request.caption_split in ("short", "balanced", "full") else "short",
         "mirror_horizontal": request.mirror_horizontal,
         "translation_mode": request.translation_mode,
+        "allow_browser_cookies": request.allow_browser_cookies,
     }
     if request.translation_mode not in ("manual", "gemini"):
         raise HTTPException(400, "Unknown translation mode.")
+    if request.translation_mode == "gemini" and not request.translation_consent:
+        raise HTTPException(400, "Confirm that the source transcript may be sent to Google Gemini.")
     job, _ = video_library.create(
         f"RedNote-{identity['content_id']}.mp4", ".mp4", options,
         source_kind="rednote", source_identity=json.dumps(identity, ensure_ascii=False),
@@ -1072,7 +1110,13 @@ def prepare_video_job(job_id: str):
 
 
 @app.post("/api/video-jobs/{job_id}/render", status_code=202)
-def render_video_job(job_id: str):
+def render_video_job(job_id: str, request: SpeechConsentRequest | None = None):
+    job = video_library.get(job_id)
+    if not job:
+        raise HTTPException(404, "Video job not found.")
+    export_mode = (job.get("settings") or {}).get("export_mode", "voiceover_captions")
+    if export_mode != "subtitles_only" and (request is None or not request.online_speech_consent):
+        raise HTTPException(400, "Confirm online speech processing before exporting with voice-over.")
     try:
         return video_queue.schedule(job_id, "render")
     except ValueError as exc:
@@ -1088,10 +1132,12 @@ def export_video_job(job_id: str, request: VideoExportRequest | None = None):
     mode = (request.mode if request else None) or settings.get("export_mode", "voiceover_captions")
     if mode not in ("voiceover_captions", "voiceover_only", "subtitles_only"):
         raise HTTPException(400, "Unknown export mode.")
+    if mode != "subtitles_only" and (request is None or not request.speech_consent):
+        raise HTTPException(400, "Confirm online speech processing before exporting with voice-over.")
     settings["export_mode"] = mode
     settings["caption_burn"] = mode != "voiceover_only"
     video_library.update(job_id, settings=settings)
-    return render_video_job(job_id)
+    return render_video_job(job_id, SpeechConsentRequest(online_speech_consent=bool(request and request.speech_consent)))
 
 
 @app.get("/api/video-jobs/{job_id}/exports/current")
@@ -1154,7 +1200,9 @@ def edit_completed_video(job_id: str):
 
 
 @app.post("/api/video-jobs/{job_id}/segments/{segment_id}/preview")
-def preview_video_segment(job_id: str, segment_id: str):
+def preview_video_segment(job_id: str, segment_id: str, request: SpeechConsentRequest):
+    if not request.online_speech_consent:
+        raise HTTPException(400, "Confirm online speech processing before generating a scene preview.")
     try:
         return video_queue.synthesize_segment(job_id, segment_id)
     except ValueError as exc:
@@ -1193,7 +1241,9 @@ def create_video_segment(job_id: str, request: VideoSegmentCreate):
 
 
 @app.post("/api/video-jobs/{job_id}/preview", status_code=202)
-def preview_video_job(job_id: str):
+def preview_video_job(job_id: str, request: SpeechConsentRequest):
+    if not request.online_speech_consent:
+        raise HTTPException(400, "Confirm online speech processing before generating video narration.")
     try:
         return video_queue.schedule(job_id, "render")
     except ValueError as exc:

@@ -177,7 +177,8 @@ class RedNoteDownloader:
             })
         return receive
 
-    def download(self, job_id: str, url: str, folder: Path, best_quality: bool = True) -> dict:
+    def download(self, job_id: str, url: str, folder: Path, best_quality: bool = True,
+                 allow_browser_cookies: bool = False) -> dict:
         try:
             import yt_dlp
         except ImportError as exc:
@@ -209,7 +210,8 @@ class RedNoteDownloader:
             "overwrites": False,
         }
         last_error: Exception | None = None
-        for browser in (None, "chrome", "edge"):
+        browsers = (None, "chrome", "edge") if allow_browser_cookies else (None,)
+        for browser in browsers:
             options = dict(base)
             if browser:
                 options["cookiesfrombrowser"] = (browser,)

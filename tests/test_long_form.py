@@ -210,7 +210,7 @@ class LongFormTests(unittest.TestCase):
         app_module.batch_queue = BatchQueue(app_module.library, queue)
         response = self.client.post(
             "/api/batches",
-            json={"title": "Videos", "items": [
+            json={"title": "Videos", "online_speech_consent": True, "items": [
                 {"video_name": "One", "script": "မင်္ဂလာပါ။", "preset": "turbo"},
                 {"video_name": "Two", "script": "ကျေးဇူးတင်ပါတယ်။", "preset": "turbo"},
             ]},

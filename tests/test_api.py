@@ -71,14 +71,26 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(bad_text.status_code, 400)
 
     def test_job_input_validation(self):
+        missing_consent = self.client.post(
+            "/api/jobs", json={"text": "မင်္ဂလာပါ။", "speed": 1.0, "preset": "balanced"}
+        )
+        self.assertEqual(missing_consent.status_code, 400)
+        self.assertIn("Confirm", missing_consent.json()["detail"])
         response = self.client.post(
-            "/api/jobs", json={"text": "hello", "speed": 1.0, "preset": "balanced"}
+            "/api/jobs", json={"text": "hello", "online_speech_consent": True, "speed": 1.0, "preset": "balanced"}
         )
         self.assertEqual(response.status_code, 400)
         response = self.client.post(
-            "/api/jobs", json={"text": "မင်္ဂလာပါ။", "speed": 2.01, "preset": "balanced"}
+            "/api/jobs", json={"text": "မင်္ဂလာပါ။", "online_speech_consent": True, "speed": 2.01, "preset": "balanced"}
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_policy_pages_are_available(self):
+        for path in ("/privacy", "/terms", "/cookies"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("MMDub", response.text)
 
 
 if __name__ == "__main__":

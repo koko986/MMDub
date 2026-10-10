@@ -47,13 +47,21 @@ STS supports up to 50 minutes and 50,000 subtitle characters. Silence and cue st
 
 ## Privacy
 
-- The source video and audio never leave this computer.
+- Uploaded source video and audio remain local during transcription, editing, speech generation, and export. A RedNote source link is sent to RedNote; opt-in Chrome/Edge cookies may be read temporarily and sent to RedNote for authentication.
 - Manual SRT mode sends no transcript text to a translation service. Transcript text is sent to Gemini only when automatic translation is selected.
-- Burmese text is sent to Microsoft Edge online speech.
+- Burmese speech text and voice settings are sent to Microsoft Edge online speech only after the relevant confirmation in the app.
 - RedNote links are encrypted with Windows DPAPI; only the host and content identifier are exposed by the API. Browser cookies are read temporarily by the downloader and are never copied into app storage.
 - Existing custom recordings and historical local generations are preserved under `data/`, but archived recordings are not offered for new speech.
 - Gemini keys are added through the **Translation keys** editor, encrypted with Windows DPAPI, and kept in the ignored local `data/secrets/` folder; they are not stored in source code, SQLite, or Git.
 - Online speech is unofficial, requires internet, and may be throttled or changed by its provider.
+
+## Policies and legal scope
+
+The app includes [Privacy](static/privacy.html), [Terms](static/terms.html), and [Cookie policy](static/cookies.html) pages, also available at `/privacy`, `/terms`, and `/cookies` while it is running. They describe this local, single-user configuration, not a public hosted service. MMDub currently has no accounts, analytics, tracking pixels, third-party page embeds, payments, or subscription; therefore it has no refund process and does not show a cookie banner. It uses browser local storage only to preserve an unfinished manual SRT draft. Reassess consent and notice requirements before adding nonessential storage or publishing a hosted version.
+
+The project is maintained as a personal project from Myanmar; the maintainer’s legal name, postal address, and support email have not been supplied, so the policy pages use the project’s GitHub Issues page for contact and explicitly warn not to post private data there. Add appropriate direct contact and publisher details before any public or commercial service if applicable law requires them. Myanmar's Cybersecurity Law (Law No. 1/2025) exists, but whether particular provisions apply to this offline application or a future deployment depends on the facts and current implementing rules. These project notices are not legal advice and cannot guarantee protection from legal claims. Review local advice before hosting, monetizing, or processing other people’s data.
+
+Policy review references: [Myanmar Ministry of Information, Cybersecurity Law](https://www.moi.gov.mm/moi%3Aeng/index.php/news/16633); [EU GDPR Article 13](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679); [EU ePrivacy Directive Article 5(3)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32002L0058); [Google Gemini API terms](https://ai.google.dev/gemini-api/terms).
 
 ## Development
 

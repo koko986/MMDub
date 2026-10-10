@@ -7,16 +7,13 @@
   <title>MMDub · Burmese Voice & Video Studio</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230d1018'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%23ff6651'/%3E%3Cpath d='M22 32h4m4-10v20m6-15v10m6-7v4' stroke='%23fff7e8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/styles.css">
-  <script src="/static/app.js" defer></script>
+  <script src="/static/app.js?v=20261010-voice-load-fix1" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#quickStudio">Skip to main content</a>
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="MMDub home">
-      <span class="brand-mark" aria-hidden="true">အ</span>
-      <span><strong>MMDub</strong><small>BURMESE VOICE &amp; VIDEO</small></span>
-    </a>
     <div id="modelStatus" class="model-status" role="status" aria-live="polite">
       <span class="status-pulse"></span>
       <span><strong>Checking model</strong><small>မော်ဒယ် စစ်ဆေးနေသည်</small></span>
@@ -63,7 +60,9 @@
         <textarea id="ttsText" rows="8" maxlength="50000" spellcheck="false" placeholder="မင်္ဂလာပါ။ ဒီနေ့ နေကောင်းလား။"></textarea>
         <button id="clearText" class="icon-button clear-button" type="button" title="Clear text" aria-label="Clear text">×</button>
       </div>
-      <p id="textHint" class="field-hint">Only Burmese text is sent to Microsoft online speech. Completed chunks are cached locally.</p>
+      <p id="textHint" class="field-hint">Burmese text and voice settings are sent to Microsoft online speech. Completed chunks are cached locally.</p>
+      <label class="consent-row external-consent"><input id="quickSpeechConsent" type="checkbox" aria-describedby="quickSpeechConsentHint"><span>I understand that my text and selected voice settings are sent to Microsoft’s online speech service to make this audio.<small id="quickSpeechConsentHint">Text is sent only when I generate speech. <a href="/privacy">Privacy details</a></small></span></label>
+      <p id="quickSpeechConsentError" class="inline-error" hidden role="alert">Check the box to continue with online speech.</p>
 
       <div class="control-grid">
         <div class="control-block voice-control">
@@ -155,17 +154,18 @@
       <div id="libraryList" class="library-list" aria-live="polite">
         <div class="library-empty">No saved audio yet. / သိမ်းထားသော အသံ မရှိသေးပါ။</div>
       </div>
-      <p class="license-note">For personal and noncommercial use · CC BY-NC 4.0</p>
     </aside>
   </main>
 
-  <section id="subtitleStudio" class="subtitle-studio studio-view" hidden>
+  <section id="subtitleStudio" class="subtitle-studio studio-view" role="main" aria-label="Subtitle to speech workspace" tabindex="-1" hidden>
     <section class="subtitle-input-panel" aria-labelledby="subtitleTitle">
-      <div class="section-heading"><div><p class="eyebrow">SUBTITLE TO SPEECH</p><h1 id="subtitleTitle">SRT စာတန်းကို <em>အသံပြောင်းပါ</em></h1><p>Paste or import Burmese subtitles. The narration follows every cue's original timestamp.</p></div><span class="private-badge">SRT STAYS LOCAL</span></div>
+      <div class="section-heading"><div><p class="eyebrow">SUBTITLE TO SPEECH</p><h1 id="subtitleTitle">SRT စာတန်းကို <em>အသံပြောင်းပါ</em></h1><p>Paste or import Burmese subtitles. The narration follows every cue's original timestamp.</p></div><span class="private-badge">ONLINE VOICE</span></div>
       <label class="srt-upload" for="subtitleFile"><input id="subtitleFile" type="file" accept=".srt,application/x-subrip,text/plain"><strong>Import an SRT file</strong><small>UTF-8 · maximum 50 minutes</small></label>
       <label class="field-label" for="subtitleText"><span>SRT subtitles <small>စာတန်း</small></span><span id="subtitleCount" class="count">0 cues</span></label>
       <textarea id="subtitleText" rows="15" spellcheck="false" placeholder="1&#10;00:00:00,000 --> 00:00:03,000&#10;မင်္ဂလာပါ။"></textarea>
       <p class="field-hint">If narration is longer than its timestamp window, it is carefully sped up and listed as a timing warning.</p>
+      <label class="consent-row external-consent"><input id="subtitleSpeechConsent" type="checkbox" aria-describedby="subtitleSpeechConsentHint"><span>I understand that subtitle text and selected voice settings are sent to Microsoft’s online speech service to make this audio.<small id="subtitleSpeechConsentHint">Text is sent only when I generate narration. <a href="/privacy">Privacy details</a></small></span></label>
+      <p id="subtitleSpeechConsentError" class="inline-error" hidden role="alert">Check the box to continue with online speech.</p>
       <div class="subtitle-controls">
         <label>Voice<select id="subtitleVoice"></select></label>
         <label>Speed<input id="subtitleSpeed" type="number" min=".8" max="2" step=".05" value="1"></label>
@@ -188,7 +188,7 @@
     </aside>
   </section>
 
-  <section id="projectStudio" class="project-studio studio-view" hidden>
+  <section id="projectStudio" class="project-studio studio-view" role="main" aria-label="Long-form voice workspace" tabindex="-1" hidden>
     <header class="project-toolbar">
       <div>
         <p class="eyebrow">LONG-FORM STUDIO</p>
@@ -269,6 +269,8 @@
             <span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
             <span><strong>Render narration</strong><small>အသံရှည် ဖန်တီးမည်</small></span>
           </button>
+          <label class="consent-row external-consent"><input id="projectSpeechConsent" type="checkbox"><span>I understand that my project script and voice settings are sent to Microsoft’s online speech service when rendering.<small>Only sent when you render. <a href="/privacy">Privacy details</a></small></span></label>
+          <p id="projectSpeechConsentError" class="inline-error" hidden role="alert">Confirm online speech processing before rendering.</p>
           <div id="renderProgress" class="progress-card" hidden aria-live="polite">
             <div class="progress-copy"><span id="renderMessage">Preparing…</span><strong id="renderPercent">0%</strong></div>
             <div class="progress-track"><span id="renderBar"></span></div>
@@ -288,10 +290,10 @@
     </div>
   </section>
 
-  <section id="videoStudio" class="video-studio studio-view" hidden>
+  <section id="videoStudio" class="video-studio studio-view" role="main" aria-label="Video dubbing workspace" tabindex="-1" hidden>
     <header class="project-toolbar video-hero">
       <div><p class="eyebrow">ANY LANGUAGE → BURMESE</p><h1>Link, translate, and <em>keep 1× video</em></h1><p>Upload a video or paste a RedNote link. Available subtitles are reused; otherwise fast local transcription detects the language automatically.</p></div>
-      <div class="privacy-stack"><span class="private-badge">VIDEO STAYS LOCAL</span><button id="openGeminiKeys" class="secondary-button" type="button">Translation keys</button></div>
+      <div class="privacy-stack"><span class="private-badge">SOURCE VIDEO NOT SENT TO VOICE</span><button id="openGeminiKeys" class="secondary-button" type="button">Translation keys</button></div>
     </header>
 
     <ol class="video-steps" aria-label="Dubbing workflow">
@@ -319,13 +321,16 @@
           <label>RedNote / Xiaohongshu share link<input id="rednoteUrl" type="text" inputmode="url" placeholder="Paste the link or the complete copied share message" autocomplete="off"></label>
           <div class="rednote-quality"><strong>Best available quality</strong><span>H.264 MP4 preferred · interrupted downloads resume</span></div>
           <label class="permission-check"><input id="rednotePermission" type="checkbox"><span>I have permission to download and repurpose this video.</span></label>
-          <p class="field-hint">You can paste the entire message from RedNote’s Share button. The link is encrypted for resume. The app tries anonymous access, then your signed-in Chrome or Edge session without copying browser cookies.</p>
+          <label class="permission-check"><input id="rednoteCookieConsent" type="checkbox"><span>If anonymous download fails, allow MMDub to read my signed-in Chrome or Edge session for this download.</span></label>
+          <p class="field-hint">You can paste the entire message from RedNote’s Share button. The link is encrypted for resume. Browser session cookies are used only if you check the separate opt-in below; they are read temporarily and sent to RedNote to authenticate.</p>
         </div>
         <fieldset class="translation-choice">
           <legend>How should the Burmese translation be added?</legend>
           <label><input type="radio" name="videoTranslationMode" value="manual" checked><span><strong>Manual SRT</strong><small>Fastest handoff · copy transcript and import your translation</small></span></label>
           <label><input type="radio" name="videoTranslationMode" value="gemini"><span><strong>Gemini automatic</strong><small>Send transcript text to your saved Gemini key</small></span></label>
         </fieldset>
+        <label id="geminiConsentRow" class="permission-check gemini-consent" hidden><input id="geminiTranslationConsent" type="checkbox"><span>I understand the source transcript will be sent to Google Gemini for translation. Google’s data handling depends on the API service and account terms; I will not submit sensitive or confidential material.</span></label>
+        <p id="geminiConsentHint" class="field-hint gemini-consent" hidden>Manual SRT does not send transcript text to Google. <a href="/privacy">See privacy details and Google’s terms</a>.</p>
         <div class="video-settings-grid">
           <label>Voice<select id="videoVoice"></select></label>
           <label hidden>Quality<select id="videoQuality"><option value="balanced">Online</option></select></label>
@@ -336,7 +341,7 @@
           <label class="check-setting"><input id="mirrorOnImport" type="checkbox" checked><span>Mirror horizontally before review<small>Preview and export orientation; original file stays intact.</small></span></label>
         </div>
         <div class="video-experience-row">
-          <p><strong>Natural spoken Burmese</strong><small>Manual SRT is private and fastest; Gemini can optionally adapt conversation, explanation, news, or storytelling.</small></p>
+          <p><strong>Spoken-style Burmese</strong><small>Manual SRT keeps translation text out of Gemini; optional Gemini translation can adapt conversation, explanation, news, or storytelling.</small></p>
           <label class="sound-toggle"><input id="completionSound" type="checkbox" checked><span>Completion sound<small>Review + export alerts</small></span></label>
         </div>
         <details class="video-note"><summary>How privacy and online voice work</summary><p>Video and source audio stay on this computer. Manual SRT mode sends no transcript anywhere. Gemini mode sends transcript text to Gemini. After approval, only Burmese narration text is sent to Microsoft online speech.</p></details>
@@ -385,7 +390,7 @@
               <button id="editorUndo" type="button">Undo</button><button id="editorRedo" type="button">Redo</button>
               <button id="previewTimeline" type="button">Preview all</button><button id="addCaptionCue" type="button">Add timed sentence</button><span id="editSaveState" role="status">Saved</span>
             </div>
-            <div class="editor-preview"><video id="sourcePreview" controls preload="metadata"></video><div id="blurPreview" class="blur-preview" tabindex="0" aria-label="Original subtitle blur region"></div><div id="captionPreview" class="caption-preview" tabindex="0"><span class="caption-burmese"></span><span class="caption-original"></span></div></div>
+            <div class="editor-preview"><video id="sourcePreview" controls preload="metadata" aria-label="Source video preview"></video><div id="blurPreview" class="blur-preview" tabindex="0" aria-label="Original subtitle blur region"></div><div id="captionPreview" class="caption-preview" tabindex="0"><span class="caption-burmese"></span><span class="caption-original"></span></div></div>
             <div id="sceneTimeline" class="scene-timeline" aria-live="polite"><span class="timeline-range"></span><strong>Select a scene to inspect its cue</strong></div>
             <div class="mix-settings">
               <input id="captionBurn" type="checkbox" hidden aria-hidden="true">
@@ -407,6 +412,8 @@
               <label><input type="radio" name="videoExportMode" value="voiceover_only"><span><strong>Voice-over only</strong><small>Narration and ambience without burned subtitles</small></span></label>
               <label><input type="radio" name="videoExportMode" value="subtitles_only"><span><strong>Subtitles only</strong><small>Keep original audio and skip online voice generation</small></span></label>
             </fieldset>
+            <label class="permission-check external-consent" id="videoSpeechConsentRow"><input id="videoSpeechConsent" type="checkbox"><span>For voice-over or scene previews, I agree to send Burmese narration text and voice settings to Microsoft’s online speech service. This is not needed for subtitle-only export.</span></label>
+            <p id="videoSpeechConsentError" class="inline-error" hidden role="alert">Confirm online speech processing before generating narration.</p>
             <div id="exportCheckpoint" class="export-checkpoint" hidden aria-live="polite"></div>
             <section class="blur-controls" aria-labelledby="blurTitle">
               <div><p class="eyebrow">ORIGINAL SUBTITLE</p><h3 id="blurTitle">Blur source captions</h3><span id="blurConfidence" class="field-hint">Detection pending</span></div>
@@ -422,7 +429,7 @@
             <button id="renderVideo" class="generate-button" type="button"><span class="generate-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><strong>Export approved video</strong><small>အသံဖန်တီးပြီး ပုံနှင့်ညှိမည်</small></span></button>
           </div>
           <div id="videoResult" class="video-result" hidden>
-            <video id="dubbedVideo" controls preload="metadata"></video>
+            <video id="dubbedVideo" controls preload="metadata" aria-label="Finished Burmese video"></video>
             <div class="video-result-actions">
               <button id="editAgain" class="secondary-button" type="button">Edit again</button>
               <a id="downloadDubbedVideo" class="download-button" href="#" download>Download Burmese MP4</a>
@@ -436,7 +443,7 @@
     </div>
   </section>
 
-  <section id="batchStudio" class="batch-studio studio-view" hidden>
+  <section id="batchStudio" class="batch-studio studio-view" role="main" aria-label="Batch voice workspace" tabindex="-1" hidden>
     <header class="project-toolbar">
       <div><p class="eyebrow">VIDEO VOICEOVER QUEUE</p><h1>ဗီဒီယိုများအတွက် <em>အသံတန်းစီ</em></h1><p>Add many scripts, assign a voice to each, and let the GPU render them one at a time.</p></div>
       <button id="newBatch" class="primary-button" type="button">+ New batch</button>
@@ -452,6 +459,8 @@
         </div>
         <p class="field-hint">CSV columns: video_name, script, voice, speed, quality, delivery</p>
         <div id="batchItems" class="batch-items"></div>
+        <label class="consent-row external-consent"><input id="batchSpeechConsent" type="checkbox"><span>I understand that batch scripts and voice settings are sent to Microsoft’s online speech service when rendered.<small>Only sent while processing each item. <a href="/privacy">Privacy details</a></small></span></label>
+        <p id="batchSpeechConsentError" class="inline-error" hidden role="alert">Confirm online speech processing before starting a batch.</p>
         <div id="batchError" class="inline-error" hidden role="alert"></div>
         <button id="startBatch" class="generate-button" type="button"><span class="generate-icon"><i></i><i></i><i></i><i></i></span><span><strong>Start batch</strong><small>တစ်ခုပြီးတစ်ခု ဖန်တီးမည်</small></span></button>
       </section>
@@ -586,5 +595,21 @@
   </dialog>
 
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+  <footer class="site-footer" aria-label="Legal and project information">
+    <span>MMDub · Personal project maintained from Myanmar</span>
+    <nav aria-label="Policies"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookie policy</a><a href="https://github.com/koko986/MMDub/issues" target="_blank" rel="noopener noreferrer">Contact / report an issue</a></nav>
+  </footer>
+  <script>
+    if (new URLSearchParams(window.location.search).get("view") === "video") {
+      document.getElementById("quickStudio").hidden = true;
+      document.getElementById("videoStudio").hidden = false;
+      document.getElementById("voiceModeSwitch").hidden = true;
+      document.getElementById("quickTab").classList.remove("active");
+      document.getElementById("quickTab").setAttribute("aria-selected", "false");
+      document.getElementById("videoTab").classList.add("active");
+      document.getElementById("videoTab").setAttribute("aria-selected", "true");
+      document.querySelector(".skip-link").href = "#videoStudio";
+    }
+  </script>
 </body>
 </html>

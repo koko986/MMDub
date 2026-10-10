@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MMDub privacy notice for the local Burmese voice and video studio.">
+  <title>Privacy · MMDub</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="legal-page">
+  <a class="skip-link" href="#main">Skip to privacy notice</a>
+  <main id="main" class="legal-main" tabindex="-1">
+    <article class="legal-document">
+      <p class="eyebrow">YOUR DATA</p>
+      <h1>Privacy notice</h1>
+      <p class="legal-meta">Last updated: 10 October 2026 · Publisher: MMDub, an individual project maintained from Myanmar. Contact: <a href="https://github.com/koko986/MMDub/issues" target="_blank" rel="noopener noreferrer">MMDub GitHub Issues</a>. Do not post API keys, private videos, or personal information in public issues.</p>
+      <nav class="legal-nav" aria-label="Policy pages"><a href="/?view=video">Video dubbing</a><a href="/privacy" aria-current="page">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookie policy</a></nav>
+      <p class="legal-callout">MMDub is designed to run on your Windows computer and listens only on 127.0.0.1. The project maintainer does not receive your scripts, media, API keys, or generated files through MMDub.</p>
+
+      <h2>What stays on your computer</h2>
+      <p>Uploaded or downloaded videos, source audio, transcripts, Burmese translations, captions, edit plans, projects, voice files, generated audio, and exports are saved in MMDub’s local data folder and SQLite database. You can remove video jobs, projects, and generated audio in the app. Gemini keys and RedNote links are encrypted for your Windows account with Windows DPAPI and kept in the ignored local data folder. They are not written to the Git repository. A DPAPI-encrypted file may not be readable from another Windows account or machine.</p>
+      <p>Your unfinished manual Burmese SRT draft is saved in this browser’s local storage so a refresh does not erase it. It is removed after a successful import or when you delete that video job. You can also clear it by clearing this site’s browser storage.</p>
+
+      <h2>When information is sent to another service</h2>
+      <ul>
+        <li><strong>Microsoft online speech:</strong> When you generate speech or a scene preview, MMDub sends the text to be spoken, selected voice, and speech settings to Microsoft’s online speech endpoint. Your video file is not sent for speech generation. Microsoft’s service terms and privacy practices apply.</li>
+        <li><strong>Google Gemini (optional):</strong> Only when you select Gemini translation and confirm, MMDub sends source transcript text to Google using your API key. Google’s handling differs between paid and unpaid Gemini API services. Google states that unpaid service content may be used to improve services and may be reviewed by people; do not submit confidential, sensitive, or personal material through an unpaid service. Check the current <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Gemini API terms</a>. Manual SRT mode does not send transcript text to Google.</li>
+        <li><strong>RedNote/Xiaohongshu:</strong> If you provide a link, MMDub contacts the service to resolve and download that link. If you separately allow browser-session access, the downloader reads Chrome or Edge cookies temporarily and sends them to RedNote to authenticate the request. MMDub does not copy those cookies into its data folder. RedNote’s handling and platform rules apply.</li>
+        <li><strong>Setup and model downloads:</strong> First-time setup downloads software packages and local speech-analysis/transcription models from their package or model hosts. After a model is cached, transcription and emotion analysis run locally. They do not send your script to those model hosts.</li>
+      </ul>
+
+      <h2>Analytics, accounts, and embedded content</h2>
+      <p>MMDub has no user accounts, advertising, analytics, tracking pixels, externally hosted images, or third-party page embeds. It makes external requests only for the features described above and for setup or model downloads.</p>
+
+      <h2>Retention and deletion</h2>
+      <p>Local content remains on your computer until you delete it in MMDub or remove the local application data folder yourself. Use the app’s delete controls to remove the selected job or generation. Remove saved Gemini keys with the key editor. Provider-side data handling and retention are controlled by each provider’s current terms and settings, not by MMDub.</p>
+
+      <h2>Children and sensitive material</h2>
+      <p>MMDub is a local creative tool and does not ask for a child’s account or identity. You control what you enter. Do not send personal, confidential, or sensitive text to an online provider unless you have checked that provider’s current terms and have permission to do so.</p>
+
+      <h2>Publisher and questions</h2>
+      <p>MMDub is maintained as a personal project in Myanmar, not as a hosted account service. For software questions or privacy concerns, contact the maintainer through <a href="https://github.com/koko986/MMDub/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>. Share only information you are comfortable making public. This notice describes the current local application; it must be reviewed again before the app is hosted as a public service or starts collecting data remotely.</p>
+    </article>
+  </main>
+  <footer class="site-footer"><span>MMDub · Personal project maintained from Myanmar</span><nav aria-label="Policies"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookie policy</a><a href="https://github.com/koko986/MMDub/issues" target="_blank" rel="noopener noreferrer">Contact</a></nav></footer>
+</body>
+</html>
