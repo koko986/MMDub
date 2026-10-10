@@ -565,10 +565,10 @@
 
   <dialog id="geminiDialog">
     <form id="geminiForm" method="dialog">
-      <div class="dialog-head"><div><p class="eyebrow">TRANSLATION ACCESS</p><h2>Gemini API keys</h2><p>Keep one key per line. Keys are encrypted for your Windows account and automatically rotate if a key or model fails.</p></div><button id="closeGeminiDialog" class="icon-button" type="button" aria-label="Close">×</button></div>
+      <div class="dialog-head"><div><p class="eyebrow">TRANSLATION ACCESS</p><h2>Gemini API keys</h2><p>Paste your key or keys into the box below, one per line. They are encrypted for your Windows account and automatically rotate if a key or model fails.</p></div><button id="closeGeminiDialog" class="icon-button" type="button" aria-label="Close">×</button></div>
       <div id="savedKeyStatus" class="key-status">No keys saved.</div>
       <label class="stacked-label">Add or replace keys<textarea id="geminiKeys" rows="7" spellcheck="false" autocomplete="off" placeholder="Paste one key per line"></textarea></label>
-      <p class="field-hint">The studio never displays a saved key again. Saving replaces the current encrypted pool.</p>
+      <p class="field-hint">Keys are saved only on this computer in encrypted local storage. They are never included in the GitHub repository or displayed again. Saving replaces the current encrypted pool.</p>
       <div id="geminiError" class="inline-error" hidden role="alert"></div>
       <div class="dialog-actions"><button id="clearGeminiKeys" class="secondary-button" type="button">Remove saved keys</button><button id="testGeminiKeys" class="secondary-button" type="button">Test saved keys</button><button id="saveGeminiKeys" class="primary-button" type="submit">Encrypt &amp; save</button></div>
     </form>

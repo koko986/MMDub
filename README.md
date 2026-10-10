@@ -28,6 +28,14 @@ Long exports are split into checkpointed chunks near scene boundaries. RTX NVENC
 
 Video frames always remain at native 1× speed. Narration is accelerated without pitch shifting when it must fit a source cue, with a warning above 1.5×. The selected voice remains unchanged while restrained rate, pitch, volume, and pauses approximate emotion.
 
+### Add a Gemini API key
+
+1. In MMDub, open **Translate video** and click **Translation keys**.
+2. Paste one or more Gemini API keys in the **Add or replace keys** text box, with one key per line.
+3. Click **Encrypt & save**, then **Test saved keys**. MMDub stores keys encrypted for your Windows account and never shows a saved key again.
+
+Gemini keys are entered through the app's key editor. Do not put API keys in source files, the README, screenshots, or GitHub. The repository ignores local environment files, credentials, and secret folders. Use Manual SRT to translate without sending transcript text to Gemini.
+
 ## Subtitle to Speech (STS)
 
 1. Open **Subtitle voice** and paste or import a UTF-8 `.srt` file containing Burmese subtitles.
@@ -44,7 +52,7 @@ STS supports up to 50 minutes and 50,000 subtitle characters. Silence and cue st
 - Burmese text is sent to Microsoft Edge online speech.
 - RedNote links are encrypted with Windows DPAPI; only the host and content identifier are exposed by the API. Browser cookies are read temporarily by the downloader and are never copied into app storage.
 - Existing custom recordings and historical local generations are preserved under `data/`, but archived recordings are not offered for new speech.
-- Gemini keys are encrypted with Windows DPAPI and are not stored in source code or SQLite.
+- Gemini keys are added through the **Translation keys** editor, encrypted with Windows DPAPI, and kept in the ignored local `data/secrets/` folder; they are not stored in source code, SQLite, or Git.
 - Online speech is unofficial, requires internet, and may be throttled or changed by its provider.
 
 ## Development

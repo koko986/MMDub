@@ -4,3 +4,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Local credentials and private signing material must never enter Git.
+.env
+.env.*
+!.env.example
+**/secrets/
+*.pem
+*.key
+credentials.json
